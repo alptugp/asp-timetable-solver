@@ -1,0 +1,54 @@
+{
+    "lecturer": ["stevie", "lindsey", "mick", "kim"],
+    "course": ["java", "symbolic", "logic", "algorithms"],
+    "slots": 15,
+    "rooms": 3,
+    "labs": 2,
+    "capacity": {
+    "1": 85,
+    "2": 97,
+    "3":45
+    },
+    "registered": {
+    "java": 75,
+    "symbolic": 65,
+    "logic": 88,
+    "algorithms": 25
+    },
+    "can_teach": {
+	"stevie": ["java", "symbolic", "logic", "algorithms"],
+	"lindsey": ["java", "symbolic", "logic"],
+	"mick": ["java", "logic", "algorithms"],
+	"kim": ["java", "symbolic", "algorithms"]
+    },
+    "required_slots": {
+	"java": 10,
+	"symbolic": 10,
+	"logic": 14,
+	"algorithms": 10
+    },
+    "max_slots": {
+	"stevie": 8,
+	"lindsey": 12,
+	"mick": 8,
+	"kim": 8
+    },
+    "unavailable": {
+	"stevie": [1, 5, 6, 9,15],
+	"lindsey": [6, 9,10,11],
+	"mick": [5, 6, 10, 11],
+	"kim": [1, 2, 3]
+    },
+    "prerequisite":{
+      "java": [],
+    	"symbolic": [],
+    	"logic": [],
+    	"algorithms": ["java"]
+    },
+    "conflict": {
+      "stevie": ["kim"],
+    	"lindsey": [],
+    	"mick": [],
+    	"kim": ["mick"]
+    }
+}

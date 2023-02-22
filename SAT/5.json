@@ -1,0 +1,38 @@
+{
+    "lecturer": ["jane", "parminder"],
+    "course": ["biology", "quantum"],
+    "slots": 40,
+    "rooms": 1,
+    "labs":1,
+    "capacity": {
+    "1": 85
+    },
+    "registered": {
+    "biology": 75,
+    "quantum": 65
+    },
+    "can_teach": {
+	"jane": ["biology"],
+	"parminder": ["quantum"]
+    },
+    "required_slots": {
+	"biology": 20,
+	"quantum": 20
+    },
+    "max_slots": {
+	"jane": 20,
+	"parminder": 20
+    },
+    "unavailable": {
+	"jane": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38],
+	"parminder": [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39]
+    },
+    "prerequisite":{
+       "biology": [],
+       "quantum": []
+    },
+    "conflict": {
+    "parminder": [],
+    "jane": []
+    }
+}

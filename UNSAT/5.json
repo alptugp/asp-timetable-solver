@@ -1,0 +1,39 @@
+{
+    "lecturer": ["stevie", "lindsey", "mick"],
+    "course": ["java"],
+    "slots": 1,
+    "rooms": 1,
+    "labs": 1,
+    "capacity": {
+    "1": 30
+    },
+    "registered": {
+    "java": 20
+    },
+    "can_teach": {
+	"stevie": ["java"],
+	"lindsey": ["java"],
+	"mick": ["java"]
+    },
+    "required_slots": {
+	"java": 1
+    },
+    "max_slots": {
+	"stevie": 8,
+	"lindsey": 8,
+	"mick": 8
+    },
+    "unavailable": {
+	"stevie": [1],
+	"lindsey": [1],
+	"mick": [1]
+    },
+    "prerequisite":{
+    "java": []
+    },
+    "conflict": {
+      "stevie": ["mick"],
+    	"lindsey": ["stevie"],
+    	"mick": []
+    }
+}

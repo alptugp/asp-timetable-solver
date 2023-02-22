@@ -1,0 +1,16 @@
+,Room 1,,Room 2,,Room 3,,Lab 1,Lab 2
+1,logic,lindsey,,,java,mick,,
+2,logic,lindsey,java,mick,,,,
+3,java,mick,logic,lindsey,,,,
+4,java,mick,symbolic,lindsey,,,,
+5,,,,,,,symbolic,java
+6,,,,,,,java,java
+7,,,java,mick,,,symbolic,
+8,java,mick,,,,,symbolic,
+9,java,mick,,,,,,
+10,,,symbolic,lindsey,,,,
+11,,,symbolic,lindsey,,,,
+12,,,java,mick,,,,
+13,,,,,symbolic,lindsey,,
+14,,,,,symbolic,lindsey,,java
+15,,,,,symbolic,lindsey,,logic

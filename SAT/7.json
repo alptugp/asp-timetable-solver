@@ -1,0 +1,50 @@
+{
+    "lecturer": ["titus", "dalal", "charles"],
+    "course": ["symbolic", "comp_tech", "prolog", "logic"],
+    "slots": 20,
+    "rooms": 3,
+    "labs": 2,
+    "capacity": {
+    "1": 50,
+    "2": 45,
+    "3": 150
+    },
+    "registered": {
+    "comp_tech": 102,
+    "symbolic": 36,
+    "prolog": 45,
+    "logic": 67
+    },
+    "can_teach": {
+	"titus": ["prolog", "symbolic"],
+	"dalal": ["prolog", "symbolic", "logic"],
+	"charles": ["prolog", "comp_tech"]
+    },
+    "required_slots": {
+	"symbolic": 10,
+  "comp_tech": 12,
+	"prolog": 6,
+  "logic": 8
+    },
+    "max_slots": {
+  "titus": 17,
+  "dalal": 12,
+  "charles": 14
+    },
+    "unavailable": {
+	"titus": [2, 4, 6, 8],
+	"dalal": [],
+	"charles": [19, 20]
+    },
+    "prerequisite":{
+       "symbolic": ["prolog"],
+       "comp_tech": [],
+       "prolog": [],
+       "logic": []
+    },
+    "conflict": {
+    "titus": [],
+    "dalal": [],
+    "charles": []
+    }
+}

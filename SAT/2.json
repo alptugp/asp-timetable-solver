@@ -1,0 +1,39 @@
+{
+    "lecturer": ["ally", "dalal"],
+    "course": ["java", "symbolic"],
+    "slots": 6,
+    "rooms": 2,
+    "labs": 1,
+    "capacity": {
+    "1": 30,
+    "2": 70
+    },
+    "registered": {
+    "java": 20,
+    "symbolic": 15
+    },
+    "can_teach": {
+	"ally": ["java"],
+	"dalal": ["symbolic"]
+    },
+    "required_slots": {
+	"java": 4,
+	"symbolic": 4
+    },
+    "max_slots": {
+	"ally": 8,
+	"dalal": 8
+    },
+    "unavailable": {
+	"ally": [],
+	"dalal": []
+    },
+    "prerequisite":{
+  "symbolic": [],
+  "java": []
+    },
+  "conflict": {
+  "ally": [],
+  "dalal": []
+    }
+}
