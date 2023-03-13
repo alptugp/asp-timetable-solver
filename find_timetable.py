@@ -188,21 +188,25 @@ def emit_program(json_data: Dict[str, Any], asp_file: TextIO, optimize: bool,msc
     if optimize:
         problem += "% (p) write an optimization statement that minimizes the max \n"
         problem += "% number of hours lecturers is assisgned to teach\n\n"
-
+        problem += "assigned_slots(L, N) :- {slot(C) : assign(L, C, S)} = N, lecturer(L)."
+        problem += "#minimize {N @ 1, L: lecturer(L), assigned_slots(L, N)}."
         problem += "\n"
 
         problem += "% write a rule for assigned_courses/2 that gives the number\n"
         problem += "% of courses assigned to a lecturer.\n\n"
-
+        problem += "assigned_courses(L, N) :- {course(C): assign(L, C, S)} = N, lecturer(L)."
         problem += "\n"
 
         problem += "% (q) write an optimization statement that minimizes the number of courses\n"
         problem += "% lecturers are assigned\n\n"
+        problem += "#minimize {N @ 2, L: lecturer(L), assigned_courses(L, N)}."
         problem += "\n"
 
         if msc:
             problem += "% write a definition for allocated_rooms/2 which gives the number of rooms to\n"
             problem += "% which a course was allocated\n\n"
+            problem += "allocated_rooms(C, N) :- {room(R): schedule(C, R, S)} = N, course(C)."
+            problem += "#minimize {N @ 3, C: course(C), allocated_rooms(C, N)}."
     
             problem += "\n"        
             problem += "% (r) write an optimization statement that minimizes the number of different rooms \n"
