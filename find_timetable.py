@@ -22,13 +22,65 @@ def emit_program(json_data: Dict[str, Any], asp_file: TextIO, optimize: bool,msc
     # to define a fact for each lecturer, i.e.,
     # lecturer(stevie). lecturer(lindsey). etc
 
-    for l in json_data["lecturer"]:
-        instance+= "lecturer(" + str(l).lower()  + ").\n"
-
+    for lecturer in json_data["lecturer"]:
+        instance+= "lecturer(" + str(lecturer).lower()  + ").\n"
     instance+="\n"
 
     # ... complete the rest
 
+    for course in json_data["course"]:
+        instance+= "course(" + str(course).lower()  + ").\n"
+    instance+="\n"
+
+    for i in range (1, json_data["slots"] + 1):
+        instance+= "slot(" + str(i).lower()  + ").\n"
+    instance+="\n"
+
+    for i in range (1, json_data["rooms"] + 1):
+        instance+= "room(" + str(i).lower()  + ").\n"
+    instance+="\n"
+
+    for i in range (1, json_data["labs"] + 1):
+        instance+= "lab(" + str(i).lower()  + ").\n"
+    instance+="\n"
+
+    for room, capacity in json_data["capacity"].items():
+        instance+= "capacity(" + str(room).lower() + ", " + str(capacity).lower() + ").\n"
+    instance+="\n"
+
+    for course, registeredAmount in json_data["registered"].items():
+        instance+= "registered(" + str(course).lower() + ", " + str(registeredAmount).lower() + ").\n"
+    instance+="\n"
+
+    for lecturer, courses in json_data["can_teach"].items():
+        for course in courses: 
+            instance+= "can_teach(" + str(lecturer).lower() + ", " + str(course).lower() + ").\n"
+    instance+="\n"
+
+    for course, requiredSlots in json_data["required_slots"].items():
+        instance+= "required_slots(" + str(course).lower() + ", " + str(requiredSlots).lower() + ").\n"
+    instance+="\n"
+
+    for lecturer, maxSlots in json_data["max_slots"].items():
+        instance+= "max_slots(" + str(lecturer).lower() + ", " + str(maxSlots).lower() + ").\n"
+    instance+="\n"
+
+    for lecturer, unavailableSlots in json_data["unavailable"].items():
+        for unavailableSlot in unavailableSlots: 
+            instance+= "unavailable(" + str(lecturer).lower() + ", " + str(unavailableSlot).lower() + ").\n"
+    instance+="\n"
+
+    for course, preqCourses in json_data["prerequisite"].items():
+        for preqCourse in preqCourses: 
+            instance+= "prerequisite(" + str(course).lower() + ", " + str(preqCourse).lower() + ").\n"
+    instance+="\n"
+
+    for lecturer, conflictedLecturers in json_data["conflict"].items():
+        for conflictedLecturer in conflictedLecturers: 
+            instance+= "conflict(" + str(lecturer).lower() + ", " + str(conflictedLecturer).lower() + ").\n"
+    instance+="\n"
+
+    asp_file.write(instance)
 
     # TODO: add code to append your encoding of the rules described in 
     # step 2 to 'asp_file'
@@ -37,93 +89,97 @@ def emit_program(json_data: Dict[str, Any], asp_file: TextIO, optimize: bool,msc
 
     problem += "% (a) Write a choice rule for assigning lecturers \n"
     problem += "% courses conditional on their being able and available to teach it\n\n" 
-
+    problem += "{assign(X, Y, Z)} :- can_teach(X, Y), not unavailable(X, Z), lecturer(X), course(Y), slot(Z).\n"
     problem += "\n"
 
     problem += "% (b) write a choice rules that schedules at most one course\n"
     problem += "% at most in one room at any one time.\n\n" 
-
+    problem += "{schedule(X, Y, Z)} :- course(X), room(Y), slot(Z), not schedule(K, Y, Z), course(K).\n"
     problem += "\n"
 
     problem += "% (c) write a choice rules that books at most one courses\n"
     problem += "% in one lab at any one time.\n\n" 
-
+    problem += "{book(X, Y, Z)} :- course(X), lab(Y), slot(Z), not book(K, Y, Z), course(K).\n"
     problem += "\n"
 
     problem += "% (d.i) write a rule using aggregate expression that gives the number\n"
     problem += "% of hours a lecturer is assigned to teach\n\n"
-
+    problem += "total_assigned_hours(X, T) :- T = #count {Y, Z: assign(X, Y, Z)}, lecturer(X)."
     problem += "\n"
+
     problem += "% (d.ii) write a constraint using an aggregate expression that ensures that lecturers are not assigned\n"
     problem += "% to teach more hours than their maximum number of slots.\n\n" 
-
+    problem += ":- T > M, total_assigned_slots(X, T), max_slots(X, M).\n"
     problem += "\n"
 
     problem += "% (e) write a constraint to ensure no course is scheduled in a room with not \n"
     problem += "% enough capacity. \n\n" 
-
+    problem += ":- N > C, schedule(X, Y, Z), capacity(Y, C), registered(X, N).\n"
     problem += "\n"
 
     problem += "% (f) write a constraint that ensures courses are scheduled at most once at any specific slot. \n\n" 
-
+    problem += ":- schedule(X, Y, Z), schedule(X, A, Z), Y != A.\n"
     problem += "\n"
 
     problem += "% (g) write a constraint that ensures  no lecturer is assigned\n"
     problem += "% two courses scheduled at the same time.\n\n"
-
+    problem += ":- assign(X, Y, Z), assign(X, A, Z), Y != A.\n"
     problem += "\n"
 
     problem += "% (h) write a constraint that ensures that a course is not scheduled for more hours\n"
     problem += "% than it requires\n\n"
-
+    problem += ":- T != S, T = #count {Z: schedule(X, Y, Z)}, required_slots(X, S).\n"
     problem += "\n"
 
     problem += "% (i.i) define a predicate scheduled/2 which holds\n"
     problem += "% if a course has been scheduled a time in the timetable\n\n"
-
+    problem += "scheduled(X, Z) :- schedule(X, Y, Z).\n"
     problem += "\n"
 
     problem += "% (i.ii) write a constraint to ensure every assigned course is scheduled\n"
-
+    problem += ":- assigned(C, S), not scheduled(C, S)."
     problem += "\n"
 
     problem += "% (j.i) define a predicate assigned/2 which holds\n"
     problem += "% if a course has been assigned a lecturer at a given time.\n\n"
-
+    problem += "assigned(Y, Z) :- assign(X, Y, Z).\n"
     problem += "\n"
 
     problem += "% (j.ii) write a constraint that ensures every scheduled course\n"
     problem += "% assigned a lecturer \n\n"
-
+    problem += ":- not assigned(C, S), scheduled(C, S)."
     problem += "\n"
 
     problem += "% (k) write a constraint that ensures no course is scheduled\n" 
     problem += "% before its prerequisites\n"
+    problem += ":- scheduled(C1, S1), scheduled(C2, S2), S1 < S2, prerequisite(C1, C2)."
     problem += "\n"
  
     problem += "% (l) write a constraint that ensures no lecturer is assigned\n" 
     problem += "% to teach a course in a room immediately following another\n"
     problem += "% lecturer with which they have a conflict;\n"
+    problem += "% lecturer with which they have a conflict;\n"
+    problem += ":- schedule(Y, R, Z), schedule(B, R, C), conflict(A, X), assign(X, Y, Z), assign(A, B, C), Z + 1 == C."
     problem += "\n"
     
     problem += "% (m) write a constraint that ensures every course must have at least one\n" 
     problem += "% lab slot for every two slots not in a lab\n"
-    
+    problem += ":- N != S / 2, N = {book(X, Y, Z)}, required_slots(X, S)."
     problem += "\n"
 
     problem += "% (n) write a constraint that ensures no lab session for a course is booked\n" 
     problem += "% at the same time as its scheduled lecture.\n"
-    
+    problem += ":- book(C, _, Z), scheduled(C, Z)."
     problem += "\n"
 
     problem += "% (o.i) define a predicate scheduled_before/2 which holds\n"
     problem += "% if a course has been scheduled before a specific time in the timetable\n\n"
-
+    problem += "scheduled_before(X, Z) :- scheduled(X, S), S < Z, slot(Z)."
     problem += "\n"
 
     problem += "% (o.ii) write a constraint that ensures no lab session for a course is booked\n" 
-    problem += "% before at least one  lecture has been scheduled.\n"
-    
+    problem += "% before at least one lecture has been scheduled.\n"
+    problem += ":- not scheduled_before(X, Z), book(X, _, Z), course(X), slot(Z)."
     problem += "\n"
 
     # TODO: add your encoding of the optimization statements in step3. Only append these to the program
