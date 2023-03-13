@@ -1,79 +1,61 @@
 lecturer(stevie).
+max_slots(stevie,8).
+can_teach(stevie,java).
+can_teach(stevie,symbolic).
+unavailable(stevie,1).
+unavailable(stevie,5).
+unavailable(stevie,6).
+unavailable(stevie,9).
+conflict(stevie,lindsey).
+
 lecturer(lindsey).
+max_slots(lindsey,12).
+can_teach(lindsey,logic).
+can_teach(lindsey,symbolic).
+unavailable(lindsey,6).
+unavailable(lindsey,9).
+
 lecturer(mick).
+max_slots(mick,8).
+can_teach(mick,logic).
+can_teach(mick,java).
+unavailable(mick,5).
+unavailable(mick,6).
+unavailable(mick,10).
+unavailable(mick,11).
+conflict(mick,stevie).
+
 
 course(java).
+registered(java,30).
+required_slots(java,8).
+
 course(symbolic).
+registered(symbolic,25).
+required_slots(symbolic,6).
+prerequisite(symbolic,logic).
+
 course(logic).
+registered(logic,35).
+required_slots(logic,3).
 
-slot(1).
-slot(2).
-slot(3).
-slot(4).
-slot(5).
-slot(6).
-slot(7).
-slot(8).
-slot(9).
-slot(10).
-slot(11).
-slot(12).
-slot(13).
-slot(14).
-slot(15).
 
-room(1).
-room(2).
-room(3).
+slot(1..15).
 
-lab(1).
-lab(2).
+room(1..3).
+capacity(1,50).
+capacity(2,45).
+capacity(3,85).
 
-capacity(1, 50).
-capacity(2, 45).
-capacity(3, 85).
-
-registered(java, 30).
-registered(symbolic, 25).
-registered(logic, 35).
-
-can_teach(stevie, java).
-can_teach(stevie, symbolic).
-can_teach(lindsey, logic).
-can_teach(lindsey, symbolic).
-can_teach(mick, logic).
-can_teach(mick, java).
-
-required_slots(java, 8).
-required_slots(symbolic, 6).
-required_slots(logic, 3).
-
-max_slots(stevie, 8).
-max_slots(lindsey, 12).
-max_slots(mick, 8).
-
-unavailable(stevie, 1).
-unavailable(stevie, 5).
-unavailable(stevie, 6).
-unavailable(stevie, 9).
-unavailable(lindsey, 6).
-unavailable(lindsey, 9).
-unavailable(mick, 5).
-unavailable(mick, 6).
-unavailable(mick, 10).
-unavailable(mick, 11).
-
-prerequisite(symbolic, logic).
-
-conflict(stevie, lindsey).
-conflict(mick, stevie).
+lab(1..2).
 
 
 
 % (a) Write a choice rule for assigning lecturers 
 % courses conditional on their being able and available to teach it
 
-{assign(X, Y, Z)} :- can_teach(X, Y), not unavailable(X, Z), lecturer(X), course(Y), slot(Z).
+{ assign(L, C, S) } :- lecturer(L), course(C), slot(S), can_teach(L, C), not unavailable(L, S).
+
 
 % (b) write a choice rules that schedules at most one course
 % at most in one room at any one time.
@@ -125,40 +107,57 @@ assigned_slots(L, N) :- lecturer(L), { assign(L, _, S) } = N.
 % (i.i) define a predicate scheduled/2 which holds
 % if a course has been scheduled a time in the timetable
 
-scheduled(X, Z) :- schedule(X, Y, Z).
+scheduled(C, S) :- course(C), slot(S), schedule(C, _, S).
+
 
 % (i.ii) write a constraint to ensure every assigned course is scheduled
-:- assigned(C, S), not scheduled(C, S).
+:- assign(_, C, S), not scheduled(C, S).
+
+
 % (j.i) define a predicate assigned/2 which holds
 % if a course has been assigned a lecturer at a given time.
 
-assigned(Y, Z) :- assign(X, Y, Z).
+assigned(C, S) :- course(C), slot(S), assign(_, C, S).
+
 
 % (j.ii) write a constraint that ensures every scheduled course
 % assigned a lecturer 
 
-:- not assigned(C, S), scheduled(C, S).
+:- scheduled(C, S), not assigned(C, S).
+
+
 % (k) write a constraint that ensures no course is scheduled
 % before its prerequisites
-:- scheduled(C1, S1), scheduled(C2, S2), S1 < S2, prerequisite(C1, C2).
+:- course(C), course(P), prerequisite(C, P), scheduled(P, S1), scheduled(C, S2), S1 >= S2.
+
+
 % (l) write a constraint that ensures no lecturer is assigned
 % to teach a course in a room immediately following another
 % lecturer with which they have a conflict;
-% lecturer with which they have a conflict;
-:- schedule(Y, R, Z), schedule(B, R, C), conflict(A, X), assign(X, Y, Z), assign(A, B, C), Z + 1 == C.
+:- assign(L1, C1, S1), assign(L2, C2, S2), S1 + 1 == S2, room(R), schedule(C1, R, S1), schedule(C2, R, S2), conflict(L2, L1).
+
+
 % (m) write a constraint that ensures every course must have at least one
 % lab slot for every two slots not in a lab
-:- N != S / 2, N = {book(X, Y, Z)}, required_slots(X, S).
+:- course(C), LS = { book(C, _, _) }, required_slots(C, NLS),  NLS / 2 != LS.
+
+
 % (n) write a constraint that ensures no lab session for a course is booked
 % at the same time as its scheduled lecture.
-:- book(C, _, Z), scheduled(C, Z).
+:- course(C), schedule(C, _, S), book(C, _, S).
+
+
 % (o.i) define a predicate scheduled_before/2 which holds
 % if a course has been scheduled before a specific time in the timetable
 
-scheduled_before(X, Z) :- scheduled(X, S), S < Z, slot(Z).
+scheduled_before(C, S) :- slot(S), slot(SB), scheduled(C, SB), SB < S.
+
+
 % (o.ii) write a constraint that ensures no lab session for a course is booked
-% before at least one lecture has been scheduled.
-:- not scheduled_before(X, Z), book(X, _, Z), course(X), slot(Z).
+% before at least one  lecture has been scheduled.
+:- course(C), book(C, _, S), not scheduled_before(C, S).
+
+
 #show schedule/3.
 #show assign/3.
 #show book/3.
