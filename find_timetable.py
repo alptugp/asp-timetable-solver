@@ -86,7 +86,7 @@ def emit_program(json_data: Dict[str, Any], asp_file: TextIO, optimize: bool,msc
     # step 2 to 'asp_file'
 
     problem = "\n\n"
-
+    """"
     problem += "% (a) Write a choice rule for assigning lecturers \n"
     problem += "% courses conditional on their being able and available to teach it\n\n" 
     problem += "{assign(X, Y, Z)} :- can_teach(X, Y), not unavailable(X, Z), lecturer(X), course(Y), slot(Z).\n"
@@ -129,6 +129,57 @@ def emit_program(json_data: Dict[str, Any], asp_file: TextIO, optimize: bool,msc
     problem += "% (h) write a constraint that ensures that a course is not scheduled for more hours\n"
     problem += "% than it requires\n\n"
     problem += ":- T != S, T = #count {Z: schedule(X, Y, Z)}, required_slots(X, S).\n"
+    problem += "\n"
+    """
+
+    problem += "% (a) Write a choice rule for assigning lecturers \n"
+    problem += "% courses conditional on their being able and available to teach it\n\n" 
+    problem += "{assign(X, Y, Z)} :- can_teach(X, Y), not unavailable(X, Z), lecturer(X), course(Y), slot(Z).\n"
+    problem += "\n"
+
+    problem += "% (b) write a choice rules that schedules at most one course\n"
+    problem += "% at most in one room at any one time.\n\n"
+    problem += "0 { schedule(x, R, S) : course(C) } 1 :- room(R), slot(S) .\n\n"
+    problem += "\n"
+
+    problem += "% (c) write a choice rules that books at most one courses\n"
+    problem += "% in one lab at any one time.\n\n" 
+    problem += "0 { book(C, L, S) : course(C) } 1 :-  lab(L), slot(S).\n\n"
+    problem += "\n"
+
+    problem += "% (d.i) write a rule using aggregate expression that gives the number\n"
+    problem += "% of hours a lecturer is assigned to teach\n\n"
+    problem += "assigned_slots(L, N) :- lecturer(L), { assign(L, _, S) } = N.\n\n"
+
+    problem += "\n"
+
+    problem += "% (d.ii) write a constraint using an aggregate expression that ensures that lecturers are not assigned\n"
+    problem += "% to teach more hours than their maximum number of slots.\n\n" 
+    problem += ":- lecturer(L), max_slots(L, M), assigned_slots(L, N), N > M.\n\n"
+
+    problem += "\n"
+
+    problem += "% (e) write a constraint to ensure no course is scheduled in a room with not \n"
+    problem += "% enough capacity. \n\n" 
+    problem += ":- course(C), room(R), schedule(C, R, _), capacity(R, CA), registered(C, N), N > CA.\n\n"
+
+    problem += "\n"
+
+    problem += "% (f) write a constraint that ensures courses are scheduled at most once at any specific slot. \n\n" 
+    problem += ":- room(R1), room(R2), course(C), slot(S), R1 != R2, schedule(C, R1, S), schedule(C, R2, S).\n\n"
+
+    problem += "\n"
+
+    problem += "% (g) write a constraint that ensures  no lecturer is assigned\n"
+    problem += "% two courses scheduled at the same time.\n\n"
+    problem += ":- course(C1), course(C2), lecturer(L), slot(S), C1 != C2, assign(L, C1, S), assign(L, C2, S).\n\n"
+
+    problem += "\n"
+
+    problem += "% (h) write a constraint that ensures that a course is not scheduled for more hours\n"
+    problem += "% than it requires\n\n"
+    problem += ":- course(C), required_slots(C, RS), #count { S : schedule(C, _, S) } != RS.\n\n"
+
     problem += "\n"
 
     problem += "% (i.i) define a predicate scheduled/2 which holds\n"
@@ -188,6 +239,7 @@ def emit_program(json_data: Dict[str, Any], asp_file: TextIO, optimize: bool,msc
     if optimize:
         problem += "% (p) write an optimization statement that minimizes the max \n"
         problem += "% number of hours lecturers is assisgned to teach\n\n"
+
         problem += "assigned_slots(L, N) :- {slot(C) : assign(L, C, S)} = N, lecturer(L)."
         problem += "#minimize {N @ 1, L: lecturer(L), assigned_slots(L, N)}."
         problem += "\n"
@@ -253,83 +305,79 @@ def solve(clingo_path: Path, asp_file: Path,  json_data: Dict[str, Any], output_
         # The code below extracts the last solution present in 'clingo_output' and write the corresponding timetable
         # into a dataframe. It's not the most efficient but serves our needs
 
-#        if clingo_output.rfind("Answer")!=-1:
-#            opt_sol=clingo_output[clingo_output.rfind("Answer"): ]
-#
-#            if optimize:
-#                stable_model_index = opt_sol.find("Optimization:")            
-#            else:
-#                stable_model_index = opt_sol.find("SATISFIABLE")
-#            
-#            stable_model = opt_sol[10:stable_model_index]
-#       
-#            atoms = stable_model.split()
+        if clingo_output.rfind("Answer")!=-1:
+            opt_sol=clingo_output[clingo_output.rfind("Answer"): ]
 
-#            Uncomment to see assign/3 and schdule/3 atoms in the answer set    
-            #print(atoms)
-
-#            schedule_pattern = r"\s*schedule\(\s*(.*)\s*,\s*(.*),\s*(.*)\)\s*"
-#            assign_pattern = r"\s*assign\(\s*(.*)\s*,\s*(.*),\s*(.*)\)\s*"
-#            book_pattern = r"\s*book\(\s*(.*)\s*,\s*(.*),\s*(.*)\)\s*"
-#            
-#            header = []
-#            for  r in range(0, json_data["rooms"]):
-#                header.append("Room " + str(r+1) )
-#                header.append("")
-#
-#            for  r in range(0, json_data["labs"]):
-#                header.append("Lab " + str(r+1) )
-#                
-#
-#            df = pd.DataFrame(index=range(1,json_data["slots"]+1),columns=header)
-#   
-#            for a in atoms:
-#                m1 = re.search(schedule_pattern, a, re.IGNORECASE)
-#                if m1:
-#                    c = str(m1.group(1))
-#                    row = m1.group(3)
-#                    col = "Room "+ m1.group(2)
-#                    df.loc[int(row)][str(col)] = c
-#
-#            for a in atoms:
-#                m1 = re.search(book_pattern, a, re.IGNORECASE)
-#                if m1:
-#                    c = str(m1.group(1))
-#                    row = m1.group(3)
-#                    col = "Lab "+ m1.group(2)
-#                    df.loc[int(row)][str(col)] = c
-#
-#            for a in atoms:    
-#                m2 = re.search(assign_pattern, a, re.IGNORECASE)
-#                if m2:
-#                    name = m2.group(1)
-#                    course = str(m2.group(2))
-#                    sl = int(m2.group(3))
-#                    rr = df.loc[sl, :]
-#                    inx=0
-#                    for items in rr.iteritems():
-#                        if items[1] == course:
-#                            break
-#                        inx+=1    
-#
-#                    df.loc[sl][inx+1]=name
-#            
-#            
-#            try:
-#                # print the timetable as a dataframe
-#                print(df) 
-#            except:
-#                print("An exception occurred")
-
+            if optimize:
+                stable_model_index = opt_sol.find("Optimization:")            
+            else:
+                stable_model_index = opt_sol.find("SATISFIABLE")
             
-    # TODO: You can uncomment the following
-    #  code, so that the correctness of your generated timetable is checked:
+            stable_model = opt_sol[10:stable_model_index]
+       
+            atoms = stable_model.split()
+           #Uncomment to see assign/3 and schdule/3 atoms in the answer set    
+           #print(atoms)
+            schedule_pattern = r"\s*schedule\(\s*(.*)\s*,\s*(.*),\s*(.*)\)\s*"
+            assign_pattern = r"\s*assign\(\s*(.*)\s*,\s*(.*),\s*(.*)\)\s*"
+            book_pattern = r"\s*book\(\s*(.*)\s*,\s*(.*),\s*(.*)\)\s*"
+            
+            header = []
+            for  r in range(0, json_data["rooms"]):
+                header.append("Room " + str(r+1) )
+                header.append("")
 
-#    df.to_csv(output_csv_path)
-#    if not check_timetable(json_data, output_csv_path):
-#        eprint("The timetable was not valid.")
-#        sys.exit(1)
-#    print("The timetable was confirmed as valid.")
+            for  r in range(0, json_data["labs"]):
+                header.append("Lab " + str(r+1) )
+                
+
+            df = pd.DataFrame(index=range(1,json_data["slots"]+1),columns=header)
+   
+            for a in atoms:
+                m1 = re.search(schedule_pattern, a, re.IGNORECASE)
+                if m1:
+                    c = str(m1.group(1))
+                    row = m1.group(3)
+                    col = "Room "+ m1.group(2)
+                    df.loc[int(row)][str(col)] = c
+
+            for a in atoms:
+                m1 = re.search(book_pattern, a, re.IGNORECASE)
+                if m1:
+                    c = str(m1.group(1))
+                    row = m1.group(3)
+                    col = "Lab "+ m1.group(2)
+                    df.loc[int(row)][str(col)] = c
+
+            for a in atoms:    
+                m2 = re.search(assign_pattern, a, re.IGNORECASE)
+                if m2:
+                    name = m2.group(1)
+                    course = str(m2.group(2))
+                    sl = int(m2.group(3))
+                    rr = df.loc[sl, :]
+                    inx=0
+                    for items in rr.iteritems():
+                        if items[1] == course:
+                            break
+                        inx+=1    
+
+                    df.loc[sl][inx+1]=name
+            
+            
+            try:
+                # print the timetable as a dataframe
+                print(df) 
+            except:
+                print("An exception occurred")
+           
+   # TODO: You can uncomment the following
+   #  code, so that the correctness of your generated timetable is checked:
+    df.to_csv(output_csv_path)
+    if not check_timetable(json_data, output_csv_path):
+        eprint("The timetable was not valid.")
+        sys.exit(1)
+    print("The timetable was confirmed as valid.")
 
 
 def main():

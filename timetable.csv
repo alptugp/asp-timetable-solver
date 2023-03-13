@@ -1,1 +1,16 @@
-UNSAT
+,Room 1,,Room 2,,Room 3,,Lab 1,Lab 2
+1,,,,,,,,
+2,,,,,,,,
+3,java,stevie,,,logic,lindsey,,
+4,,,,,,,,
+5,,,,,logic,lindsey,,
+6,,,,,,,logic,
+7,logic,mick,,,,,java,java
+8,symbolic,lindsey,,,,,java,java
+9,,,java,mick,,,symbolic,symbolic
+10,java,stevie,symbolic,lindsey,,,,
+11,symbolic,lindsey,,,java,stevie,,
+12,java,mick,,,symbolic,lindsey,,
+13,symbolic,stevie,java,mick,,,,
+14,symbolic,lindsey,java,mick,,,,
+15,,,,,java,mick,symbolic,

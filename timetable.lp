@@ -27,14 +27,15 @@ room(2).
 room(3).
 
 lab(1).
+lab(2).
 
 capacity(1, 50).
 capacity(2, 45).
 capacity(3, 85).
 
 registered(java, 30).
-registered(symbolic, 61).
-registered(logic, 75).
+registered(symbolic, 25).
+registered(logic, 35).
 
 can_teach(stevie, java).
 can_teach(stevie, symbolic).
@@ -45,7 +46,7 @@ can_teach(mick, java).
 
 required_slots(java, 8).
 required_slots(symbolic, 6).
-required_slots(logic, 12).
+required_slots(logic, 3).
 
 max_slots(stevie, 8).
 max_slots(lindsey, 12).
@@ -64,6 +65,8 @@ unavailable(mick, 11).
 
 prerequisite(symbolic, logic).
 
+conflict(stevie, lindsey).
+conflict(mick, stevie).
 
 
 
@@ -75,40 +78,49 @@ prerequisite(symbolic, logic).
 % (b) write a choice rules that schedules at most one course
 % at most in one room at any one time.
 
-{schedule(X, Y, Z)} :- course(X), room(Y), slot(Z), not schedule(K, Y, Z), course(K).
+0 { schedule(C, R, S) : course(C) } 1 :- room(R), slot(S) .
+
 
 % (c) write a choice rules that books at most one courses
 % in one lab at any one time.
 
-{book(X, Y, Z)} :- course(X), lab(Y), slot(Z), not book(K, Y, Z), course(K).
+0 { book(C, L, S) : course(C) } 1 :-  lab(L), slot(S).
+
 
 % (d.i) write a rule using aggregate expression that gives the number
 % of hours a lecturer is assigned to teach
 
-total_assigned_hours(X, T) :- T = #count {Y, Z: assign(X, Y, Z)}, lecturer(X).
+assigned_slots(L, N) :- lecturer(L), { assign(L, _, S) } = N.
+
+
 % (d.ii) write a constraint using an aggregate expression that ensures that lecturers are not assigned
 % to teach more hours than their maximum number of slots.
 
-:- T > M, total_assigned_slots(X, T), max_slots(X, M).
+:- lecturer(L), max_slots(L, M), assigned_slots(L, N), N > M.
+
 
 % (e) write a constraint to ensure no course is scheduled in a room with not 
 % enough capacity. 
 
-:- N > C, schedule(X, Y, Z), capacity(Y, C), registered(X, N).
+:- course(C), room(R), schedule(C, R, _), capacity(R, CA), registered(C, N), N > CA.
+
 
 % (f) write a constraint that ensures courses are scheduled at most once at any specific slot. 
 
-:- schedule(X, Y, Z), schedule(X, A, Z), Y != A.
+:- room(R1), room(R2), course(C), slot(S), R1 != R2, schedule(C, R1, S), schedule(C, R2, S).
+
 
 % (g) write a constraint that ensures  no lecturer is assigned
 % two courses scheduled at the same time.
 
-:- assign(X, Y, Z), assign(X, A, Z), Y != A.
+:- course(C1), course(C2), lecturer(L), slot(S), C1 != C2, assign(L, C1, S), assign(L, C2, S).
+
 
 % (h) write a constraint that ensures that a course is not scheduled for more hours
 % than it requires
 
-:- T != S, T = #count {Z: schedule(X, Y, Z)}, required_slots(X, S).
+:- course(C), required_slots(C, RS), #count { S : schedule(C, _, S) } != RS.
+
 
 % (i.i) define a predicate scheduled/2 which holds
 % if a course has been scheduled a time in the timetable
@@ -147,18 +159,6 @@ scheduled_before(X, Z) :- scheduled(X, S), S < Z, slot(Z).
 % (o.ii) write a constraint that ensures no lab session for a course is booked
 % before at least one lecture has been scheduled.
 :- not scheduled_before(X, Z), book(X, _, Z), course(X), slot(Z).
-% (p) write an optimization statement that minimizes the max 
-% number of hours lecturers is assisgned to teach
-
-assigned_slots(L, N) :- {slot(C) : assign(L, C, S)} = N, lecturer(L).#minimize {N @ 1, L: lecturer(L), assigned_slots(L, N)}.
-% write a rule for assigned_courses/2 that gives the number
-% of courses assigned to a lecturer.
-
-assigned_courses(L, N) :- {course(C): assign(L, C, S)} = N, lecturer(L).
-% (q) write an optimization statement that minimizes the number of courses
-% lecturers are assigned
-
-#minimize {N @ 2, L: lecturer(L), assigned_courses(L, N)}.
 #show schedule/3.
 #show assign/3.
 #show book/3.
